@@ -113,12 +113,6 @@ Link of the product:
 
             st.code(caption_text, language=None)
 
-            st.button(
-                "📋 Copy Caption",
-                key=f"copy_btn_{selected_date}_{i}",
-                on_click=lambda text=caption_text: st.toast("Copied! (Use Ctrl+C if needed)")
-            )
-
     # ---------- ZIP DOWNLOAD ----------
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, "w") as zf:
