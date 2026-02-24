@@ -13,6 +13,7 @@ st.markdown("""
 <style>
 .hero-title { font-size: 80px; font-weight: 800; margin-bottom: 1px; }
 .hero-subtitle { font-size: 30px; font-weight: 400; color: #888; margin-bottom: 5px; }
+.caption-box textarea { font-size: 14px !important; }
 </style>
 
 <div class="hero-title">Digihaat Story Generator</div>
@@ -50,42 +51,49 @@ if st.button("✨ Generate Stories"):
     if filtered.empty:
         st.warning("No products found for selected date.")
     else:
-        images = []
+        items = []
 
         with st.spinner("Generating stories..."):
             for _, row in filtered.iterrows():
                 data = scrape_product(row['LINK'])
 
+                deal_price = int(row['Deal Price'])
+
                 img = render_story(
                     data["name"],
                     data["old_price"],
-                    int(row['Deal Price']),
+                    deal_price,
                     data["image"]
                 )
 
-                images.append(img)
+                items.append({
+                    "image": img,
+                    "name": data["name"],
+                    "deal_price": deal_price,
+                    "link": row["LINK"]
+                })
 
-        # store by date
-        st.session_state.generated_by_date[selected_date] = images
-        st.success(f"✅ Generated {len(images)} stories for {selected_date.strftime('%d %b %Y')}")
+        st.session_state.generated_by_date[selected_date] = items
+        st.success(f"✅ Generated {len(items)} stories for {selected_date.strftime('%d %b %Y')}")
 
-# ---------- SHOW STORIES (persist per date) ----------
+# ---------- DISPLAY STORIES (Persist Per Date) ----------
 if selected_date in st.session_state.generated_by_date:
 
-    images = st.session_state.generated_by_date[selected_date]
+    items = st.session_state.generated_by_date[selected_date]
 
     st.divider()
     st.subheader(f"📸 Stories for {selected_date.strftime('%d %b %Y')}")
 
-    cols = st.columns(len(images))
+    cols = st.columns(len(items))
 
-    for i, (col, img) in enumerate(zip(cols, images)):
+    for i, (col, item) in enumerate(zip(cols, items)):
 
         with col:
-            st.image(img, use_container_width=True)
+            st.image(item["image"], use_container_width=True)
 
+            # ---------- DOWNLOAD IMAGE ----------
             buffer = io.BytesIO()
-            img.save(buffer, format="PNG")
+            item["image"].save(buffer, format="PNG")
 
             st.download_button(
                 label="⬇ Download",
@@ -95,12 +103,28 @@ if selected_date in st.session_state.generated_by_date:
                 key=f"download_{selected_date}_{i}"
             )
 
+            # ---------- COPYABLE CAPTION ----------
+            caption_text = f"""Get this {item['name']}
+
+At just ₹{item['deal_price']} 🔥
+
+Link of the product:
+{item['link']}"""
+
+            st.code(caption_text, language=None)
+
+            st.button(
+                "📋 Copy Caption",
+                key=f"copy_btn_{selected_date}_{i}",
+                on_click=lambda text=caption_text: st.toast("Copied! (Use Ctrl+C if needed)")
+            )
+
     # ---------- ZIP DOWNLOAD ----------
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, "w") as zf:
-        for i, img in enumerate(images):
+        for i, item in enumerate(items):
             img_bytes = io.BytesIO()
-            img.save(img_bytes, format="PNG")
+            item["image"].save(img_bytes, format="PNG")
             zf.writestr(f"story_{i+1}.png", img_bytes.getvalue())
 
     st.divider()
