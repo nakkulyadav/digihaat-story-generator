@@ -123,9 +123,18 @@ def render_story(name, old_price, new_price, image_url):
         (0, 0, 0)
     )
 
+    if not image_url or not image_url.startswith("http"):
+        raise Exception("Invalid image URL")
+
     # Product Image
-    response = requests.get(image_url)
-    product_img = Image.open(BytesIO(response.content)).convert("RGBA")
+    try:
+        response = requests.get(image_url, timeout=15)
+        response.raise_for_status()
+        product_img = Image.open(BytesIO(response.content)).convert("RGBA")
+    except Exception as e:
+        print("IMAGE LOAD ERROR:", e)
+        # fallback placeholder
+        product_img = Image.new("RGBA", (500, 500), (240, 240, 240, 255))
 
     box_w = 635*SCALE
     box_h = 460*SCALE
