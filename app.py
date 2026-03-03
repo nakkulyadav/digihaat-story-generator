@@ -64,7 +64,8 @@ if st.button("✨ Generate Stories"):
             "original": copy.deepcopy(original_data),
             "current": copy.deepcopy(original_data),
             "draft": copy.deepcopy(original_data),
-            "product_image": product_image
+            "product_image": product_image,
+            "link": row["LINK"] 
         })
 
     st.session_state.generated_by_date[selected_date] = items
@@ -181,11 +182,6 @@ if selected_date in st.session_state.generated_by_date:
 At just ₹{current['deal_price']} 🔥
 
 Link of the product:
-"""
+{item['link']}"""
 
-                st.text_area(
-                    "📋 Caption",
-                    caption,
-                    height=120,
-                    key=f"caption_{selected_date}_{i}"
-                )
+                st.code(caption)
