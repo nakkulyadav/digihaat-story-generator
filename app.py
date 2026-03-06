@@ -519,16 +519,9 @@ if selected_date in st.session_state.generated_by_date:
 
                 caption = f"""Get this {current['name']}
 
-            At just ₹{current['deal_price']} 🔥
+At just ₹{current['deal_price']} 🔥
 
-            Link of the product:
-            {item['link']}"""
-
-                st.text_area(
-                    "📋 Caption",
-                    caption,
-                    height=120,
-                    key=f"caption_{selected_date}_{i}"
-                )
+Link of the product:
+{item['link']}"""
 
                 st.code(caption)
