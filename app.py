@@ -414,6 +414,18 @@ if selected_date in st.session_state.generated_by_date:
 
             with st.expander(f"Story {i+1}", expanded=True):
 
+                # ---------- ERROR CASE ----------
+                if item.get("error"):
+
+                    st.error("⚠ This story could not be generated")
+
+                    st.code(item["error"])
+
+                    st.caption(f"Link: {item['link']}")
+
+                    continue
+
+                # ---------- NORMAL CASE ----------
                 draft = item["draft"]
                 current = item["current"]
                 original = item["original"]
