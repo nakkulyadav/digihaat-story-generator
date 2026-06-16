@@ -381,7 +381,7 @@ if st.button("✨ Generate Stories"):
                     except (ValueError, TypeError):
                         deal_price = deal_raw
 
-                img_url = str(data["image"])
+                img_url = data["image"]
                 if img_url.startswith("data:"):
                     b64_data = img_url.split(",", 1)[1]
                     product_image = Image.open(BytesIO(base64.b64decode(b64_data))).convert("RGBA")
