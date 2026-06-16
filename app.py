@@ -10,13 +10,15 @@ import io
 import copy
 import subprocess
 import sys
+import base64
 
 
 @st.cache_resource
 def _install_playwright_browser():
     subprocess.run(
         [sys.executable, "-m", "playwright", "install", "chromium"],
-        check=True
+        check=False,
+        capture_output=True
     )
 
 _install_playwright_browser()
@@ -382,7 +384,6 @@ if st.button("✨ Generate Stories"):
                 img_url = str(data["image"])
                 if img_url.startswith("data:"):
                     b64_data = img_url.split(",", 1)[1]
-                    import base64
                     product_image = Image.open(BytesIO(base64.b64decode(b64_data))).convert("RGBA")
                 else:
                     response = requests.get(img_url, timeout=20)
