@@ -360,13 +360,22 @@ if st.button("✨ Generate Stories"):
 
                 deal_raw = str(row['Deal Price']).strip()
 
-                if deal_raw in ["", "-", "nan", "None"]:
-                    raise ValueError("Invalid deal price")
+                if deal_raw in ["", "nan", "None"]:
+                    deal_price = "-"
+                else:
+                    try:
+                        deal_price = int(float(deal_raw))
+                    except (ValueError, TypeError):
+                        deal_price = deal_raw
 
-                deal_price = int(float(deal_raw))
-
-                response = requests.get(data["image"], timeout=20)
-                product_image = Image.open(BytesIO(response.content)).convert("RGBA")
+                img_url = str(data["image"])
+                if img_url.startswith("data:"):
+                    b64_data = img_url.split(",", 1)[1]
+                    import base64
+                    product_image = Image.open(BytesIO(base64.b64decode(b64_data))).convert("RGBA")
+                else:
+                    response = requests.get(img_url, timeout=20)
+                    product_image = Image.open(BytesIO(response.content)).convert("RGBA")
 
                 original_data = {
                     "name": data["name"],
@@ -445,15 +454,27 @@ if selected_date in st.session_state.generated_by_date:
                     key=f"old_{selected_date}_{i}"
                 )
 
-                draft_deal = st.number_input(
-                    "Deal Price (₹)",
-                    min_value=0,
-                    value=draft["deal_price"],
-                    step=1,
-                    key=f"deal_{selected_date}_{i}"
-                )
+                if isinstance(draft["deal_price"], (int, float)):
+                    draft_deal = st.number_input(
+                        "Deal Price (₹)",
+                        min_value=0,
+                        value=draft["deal_price"],
+                        step=1,
+                        key=f"deal_{selected_date}_{i}"
+                    )
+                else:
+                    raw_deal = st.text_input(
+                        "Deal Price",
+                        value=str(draft["deal_price"]),
+                        key=f"deal_{selected_date}_{i}"
+                    )
+                    try:
+                        draft_deal = int(float(raw_deal))
+                    except (ValueError, TypeError):
+                        draft_deal = raw_deal
+                        st.error("⚠ Invalid format for Deal Price")
 
-                if draft_deal > draft_old:
+                if isinstance(draft_deal, (int, float)) and draft_deal > draft_old:
                     st.warning("⚠ Caution: Deal price is more than the old price")
 
                 # Update draft state
@@ -516,7 +537,7 @@ if selected_date in st.session_state.generated_by_date:
                     item["product_image"]
                 )
 
-                st.image(rendered_image, use_container_width=True)
+                st.image(rendered_image, width="stretch")
 
                 buffer = io.BytesIO()
                 rendered_image.save(buffer, format="PNG")

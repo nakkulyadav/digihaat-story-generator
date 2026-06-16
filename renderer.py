@@ -5,7 +5,9 @@ BASE_HEIGHT = 1920
 SCALE = 2
 
 def format_price(price):
-    return f"₹{price:,}"
+    if isinstance(price, (int, float)):
+        return f"₹{price:,}"
+    return str(price)
 
 def draw_text_box_centered(draw, text, font, box, fill):
     x, y, w, h = box
@@ -107,8 +109,8 @@ def render_story(name, old_price, new_price, product_img):
     )
 
     # Product Image
-    box_w = 635 * SCALE
-    box_h = 460 * SCALE
+    box_w = 623 * SCALE
+    box_h = 450 * SCALE
 
     ratio = min(box_w / product_img.width, box_h / product_img.height)
     new_size = (int(product_img.width * ratio), int(product_img.height * ratio))
