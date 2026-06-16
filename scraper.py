@@ -33,9 +33,11 @@ async def _fetch_html_async(link):
     return html
 
 def _run_in_thread(link):
-    # Streamlit sets WindowsSelectorEventLoopPolicy for Tornado compatibility,
-    # which breaks Playwright subprocess creation. Explicitly use ProactorEventLoop.
-    loop = asyncio.ProactorEventLoop()
+    import sys
+    if sys.platform == "win32":
+        loop = asyncio.ProactorEventLoop()
+    else:
+        loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
         return loop.run_until_complete(_fetch_html_async(link))
