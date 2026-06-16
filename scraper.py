@@ -148,10 +148,5 @@ def scrape_product(link):
         }
 
     except Exception as e:
-        print(f"SCRAPER ERROR: {type(e).__name__}: {e}")
         traceback.print_exc()
-        return {
-            "name": "Product",
-            "old_price": 0,
-            "image": _placeholder_data_url("Error")
-        }
+        raise
