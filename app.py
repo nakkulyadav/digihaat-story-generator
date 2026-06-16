@@ -8,7 +8,18 @@ from PIL import Image
 from io import BytesIO
 import io
 import copy
+import subprocess
+import sys
 
+
+@st.cache_resource
+def _install_playwright_browser():
+    subprocess.run(
+        [sys.executable, "-m", "playwright", "install", "chromium"],
+        check=True
+    )
+
+_install_playwright_browser()
 
 st.set_page_config(page_title="Digihaat Story Generator", layout="wide")
 
