@@ -392,7 +392,10 @@ if st.button("✨ Generate Stories"):
                 original_data = {
                     "name": data["name"],
                     "old_price": data["old_price"],
-                    "deal_price": deal_price
+                    "deal_price": deal_price,
+                    "image_scale": 1.0,
+                    "image_offset_x": 0,
+                    "image_offset_y": 0
                 }
 
                 items.append({
@@ -489,11 +492,43 @@ if selected_date in st.session_state.generated_by_date:
                 if isinstance(draft_deal, (int, float)) and draft_deal > draft_old:
                     st.warning("⚠ Caution: Deal price is more than the old price")
 
+                st.markdown("**Product Image**")
+
+                draft_image_scale = st.slider(
+                    "Zoom",
+                    min_value=1.0,
+                    max_value=1.5,
+                    value=float(draft.get("image_scale", 1.0)),
+                    step=0.01,
+                    key=f"image_scale_{selected_date}_{i}"
+                )
+
+                draft_offset_x = st.slider(
+                    "Horizontal Position",
+                    min_value=-150,
+                    max_value=150,
+                    value=int(draft.get("image_offset_x", 0)),
+                    step=1,
+                    key=f"image_offset_x_{selected_date}_{i}"
+                )
+
+                draft_offset_y = st.slider(
+                    "Vertical Position",
+                    min_value=-150,
+                    max_value=150,
+                    value=int(draft.get("image_offset_y", 0)),
+                    step=1,
+                    key=f"image_offset_y_{selected_date}_{i}"
+                )
+
                 # Update draft state
                 item["draft"] = {
                     "name": draft_name,
                     "old_price": draft_old,
-                    "deal_price": draft_deal
+                    "deal_price": draft_deal,
+                    "image_scale": draft_image_scale,
+                    "image_offset_x": draft_offset_x,
+                    "image_offset_y": draft_offset_y
                 }
 
                 # Show Save button ONLY if draft != current
@@ -546,7 +581,10 @@ if selected_date in st.session_state.generated_by_date:
                     current["name"],
                     current["old_price"],
                     current["deal_price"],
-                    item["product_image"]
+                    item["product_image"],
+                    image_scale=current.get("image_scale", 1.0),
+                    image_offset_x=current.get("image_offset_x", 0),
+                    image_offset_y=current.get("image_offset_y", 0)
                 )
 
                 st.image(rendered_image, width="stretch")

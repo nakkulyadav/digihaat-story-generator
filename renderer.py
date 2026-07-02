@@ -1,60 +1,44 @@
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageColor
 
 BASE_WIDTH = 1080
 BASE_HEIGHT = 1920
 SCALE = 2
+
+MRP_COLOR = "#A1A1A7"
+DEAL_PRICE_COLOR = "#2A7F33"
+SAVE_COLOR = "#2A7F33"
+NAME_COLOR = "#151515"
 
 def format_price(price):
     if isinstance(price, (int, float)):
         return f"₹{price:,}"
     return str(price)
 
-def draw_text_box_centered(draw, text, font, box, fill):
-    x, y, w, h = box
+def truncate_to_char_limit(text, limit):
+    """Truncates at the last full word that fits within limit chars, never cutting a word."""
+    if len(text) <= limit:
+        return text
 
     words = text.split()
-    lines = []
-    current = ""
-
-    # Wrap by width
+    result = ""
     for word in words:
-        test = current + (" " if current else "") + word
-        bbox = draw.textbbox((0, 0), test, font=font)
-        if bbox[2] - bbox[0] <= w:
-            current = test
-        else:
-            lines.append(current)
-            current = word
+        candidate = f"{result} {word}".strip()
+        if len(candidate) > limit:
+            break
+        result = candidate
 
-    if current:
-        lines.append(current)
+    return result or text[:limit]
 
-    # Max 3 lines
-    lines = lines[:3]
+def format_savings(old_price, new_price):
+    if not isinstance(old_price, (int, float)) or not isinstance(new_price, (int, float)):
+        return None
+    if old_price <= 0 or new_price > old_price:
+        return None
 
-    # Calculate total height
-    line_heights = []
-    for line in lines:
-        bbox = draw.textbbox((0, 0), line, font=font)
-        line_heights.append(bbox[3] - bbox[1])
+    savings = round(old_price - new_price)
+    pct_off = round((old_price - new_price) / old_price * 100)
 
-    total_text_height = sum(line_heights) + (len(lines) - 1) * 5
-    current_y = y + (h - total_text_height) // 2
-
-    for line in lines:
-        bbox = draw.textbbox((0, 0), line, font=font)
-        text_w = bbox[2] - bbox[0]
-        text_h = bbox[3] - bbox[1]
-
-        draw.text(
-            (x + (w - text_w) // 2, current_y),
-            line,
-            font=font,
-            fill=fill
-        )
-
-        current_y += text_h + 5
-
+    return f"₹{savings:,} ({pct_off}%)"
 
 def draw_centered_text(draw, text, font, box, color):
     x, y, w, h = box
@@ -74,7 +58,58 @@ def draw_centered_text(draw, text, font, box, color):
     )
 
 
-def render_story(name, old_price, new_price, product_img):
+def draw_text_line(draw, text, font, x, y, line_height, color):
+    """Draws left-aligned text vertically centered within a (x, y, line_height) box,
+    matching how design tools export single-line text as (top-left, line-height)."""
+    draw.text((x, y + line_height / 2), text, font=font, anchor="lm", fill=color)
+
+
+def get_fitted_font(draw, text, font_path, target_size, max_width, min_size=10):
+    """Loads font_path at target_size, shrinking (never growing) until text fits max_width."""
+    size = target_size
+    while size > min_size:
+        font = ImageFont.truetype(font_path, size)
+        bbox = draw.textbbox((0, 0), text, font=font)
+        if bbox[2] - bbox[0] <= max_width:
+            return font
+        size -= 1
+    return ImageFont.truetype(font_path, min_size)
+
+
+def paste_product_image_cover(canvas, product_img, box, scale=1.0, offset_x=0, offset_y=0):
+    """Resizes product_img to cover the box (scaling up until an edge hits, cropping the
+    overflow on the other axis), then pastes it. scale zooms in further beyond the cover
+    fit; offset_x/offset_y (in box-space pixels) pan the crop, clamped to the image bounds."""
+    box_x, box_y, box_w, box_h = box
+
+    cover_ratio = max(box_w / product_img.width, box_h / product_img.height)
+    ratio = cover_ratio * max(scale, 1.0)
+
+    new_size = (
+        max(1, round(product_img.width * ratio)),
+        max(1, round(product_img.height * ratio))
+    )
+    resized = product_img.resize(new_size)
+
+    max_crop_x = new_size[0] - box_w
+    max_crop_y = new_size[1] - box_h
+
+    crop_x = max(0, min(max_crop_x // 2 - round(offset_x), max_crop_x))
+    crop_y = max(0, min(max_crop_y // 2 - round(offset_y), max_crop_y))
+
+    cropped = resized.crop((crop_x, crop_y, crop_x + box_w, crop_y + box_h))
+    canvas.paste(cropped, (box_x, box_y), cropped)
+
+
+def render_story(
+    name,
+    old_price,
+    new_price,
+    product_img,
+    image_scale=1.0,
+    image_offset_x=0,
+    image_offset_y=0
+):
 
     canvas = Image.open("assets/background_new.png").resize(
         (BASE_WIDTH * SCALE, BASE_HEIGHT * SCALE)
@@ -82,62 +117,91 @@ def render_story(name, old_price, new_price, product_img):
 
     draw = ImageDraw.Draw(canvas)
 
-    FONT_BOOST = 1.8
-
-    font_small = ImageFont.truetype(
-        "assets/AmazonEmberDisplay_Bd.ttf",
-        int(14 * SCALE * FONT_BOOST)
+    font_mrp = ImageFont.truetype(
+        "assets/Inter Black 900.otf",
+        int(74 * SCALE)
     )
 
-    font_old = ImageFont.truetype(
-        "assets/AmazonEmberDisplay_Rg.ttf",
-        int(36 * SCALE * FONT_BOOST)
-    )
-
-    font_new = ImageFont.truetype(
-        "assets/AmazonEmberDisplay_Bd.ttf",
-        int(40 * SCALE * FONT_BOOST)
+    font_deal_price = ImageFont.truetype(
+        "assets/Inter Black 900.otf",
+        int(74 * SCALE)
     )
 
     # Product Name
-    draw_text_box_centered(
+    name_box = (37.62 * SCALE, 1584.28 * SCALE, 1012 * SCALE, 81 * SCALE)
+    name_text = truncate_to_char_limit(name, 62)
+    font_name = get_fitted_font(
         draw,
-        name,
-        font_small,
-        (240 * SCALE, 240 * SCALE, 600 * SCALE, 100 * SCALE),
-        (0, 0, 0)
+        name_text,
+        "assets/Inter Black 900.otf",
+        45 * SCALE,
+        name_box[2]
+    )
+    draw_centered_text(
+        draw,
+        name_text,
+        font_name,
+        name_box,
+        ImageColor.getrgb(NAME_COLOR)
     )
 
-    # Product Image
-    box_w = 623 * SCALE
-    box_h = 450 * SCALE
+    # Product Image — cover-fit 600x600 box, scaled up until an edge hits
+    paste_product_image_cover(
+        canvas,
+        product_img,
+        (250 * SCALE, 500 * SCALE, 600 * SCALE, 600 * SCALE),
+        scale=image_scale,
+        offset_x=image_offset_x * SCALE,
+        offset_y=image_offset_y * SCALE
+    )
 
-    ratio = min(box_w / product_img.width, box_h / product_img.height)
-    new_size = (int(product_img.width * ratio), int(product_img.height * ratio))
-
-    product_img_resized = product_img.resize(new_size)
-
-    img_x = 218 * SCALE + (box_w - new_size[0]) // 2
-    img_y = 354 * SCALE + (box_h - new_size[1]) // 2
-
-    canvas.paste(product_img_resized, (img_x, img_y), product_img_resized)
-
-    # Old Price
-    draw_centered_text(
+    # MRP
+    draw_text_line(
         draw,
         format_price(old_price),
-        font_old,
-        (214 * SCALE, 1535 * SCALE, 160 * SCALE, 55 * SCALE),
-        (145, 94, 17)
+        font_mrp,
+        136.16 * SCALE,
+        1379.09 * SCALE,
+        95.4 * SCALE,
+        ImageColor.getrgb(MRP_COLOR)
+    )
+    
+    # MRP strikethrough line
+    strike_x, strike_y = 142 * SCALE, 1219 * SCALE
+    strike_w, strike_h = 180 * SCALE, 8 * SCALE
+    draw.rectangle(
+        [strike_x, strike_y, strike_x + strike_w, strike_y + strike_h],
+        fill=ImageColor.getrgb(MRP_COLOR)
     )
 
-    # New Price
-    draw_centered_text(
+    # Deal Price
+    draw_text_line(
         draw,
         format_price(new_price),
-        font_new,
-        (700 * SCALE, 1535 * SCALE, 180 * SCALE, 60 * SCALE),
-        (255, 255, 255)
+        font_deal_price,
+        678.49 * SCALE,
+        1379.09 * SCALE,
+        95.4 * SCALE,
+        ImageColor.getrgb(DEAL_PRICE_COLOR)
     )
+
+    # You Save
+    savings_text = format_savings(old_price, new_price)
+    if savings_text:
+        save_box = (368.62 * SCALE, 1684.28 * SCALE, 273 * SCALE, 58 * SCALE)
+        font_save = get_fitted_font(
+            draw,
+            savings_text,
+            "assets/Inter Black 900.otf",
+            int(46.55 * SCALE),
+            save_box[2]
+        )
+        draw_centered_text(
+            draw,
+            savings_text,
+            font_save,
+            save_box,
+            ImageColor.getrgb(SAVE_COLOR)
+        )
 
     return canvas

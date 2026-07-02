@@ -2,7 +2,31 @@ from playwright.async_api import async_playwright
 from bs4 import BeautifulSoup
 from PIL import Image, ImageDraw
 from concurrent.futures import ThreadPoolExecutor
-import asyncio, io, base64, traceback
+import asyncio, io, base64, traceback, re
+
+def shorten_product_name(name):
+    """Keeps only the core product name, dropping marketing copy tacked onto scraped titles.
+
+    Bundle listings (containing a standalone '+') are left untouched since every part
+    identifies what's included. Otherwise, truncates at the first comma, else at the
+    first word that starts with a digit (weight/pack-size/day-count callouts).
+    """
+    if not name:
+        return name
+
+    if re.search(r"(?:^|\s)\+(?:\s|$)", name):
+        return name
+
+    comma_index = name.find(",")
+    if comma_index != -1:
+        return name[:comma_index].strip()
+
+    words = name.split()
+    for i, word in enumerate(words):
+        if i > 0 and word[0].isdigit():
+            return " ".join(words[:i]).strip()
+
+    return name.strip()
 
 def _placeholder_data_url(text="No Image"):
     img = Image.new("RGB", (500, 500), color=(200, 200, 200))
@@ -69,7 +93,7 @@ def scrape_product(link):
             if og_title:
                 name = str(og_title.get("content", "")).strip() or None
 
-        name = name or "Product"
+        name = shorten_product_name(name or "Product")
 
         # ---------- PRICE ----------
         old_price = None
