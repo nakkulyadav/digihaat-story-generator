@@ -76,7 +76,7 @@ def draw_centered_text(draw, text, font, box, color):
 
 def render_story(name, old_price, new_price, product_img):
 
-    canvas = Image.open("assets/background.png").resize(
+    canvas = Image.open("assets/background_new.png").resize(
         (BASE_WIDTH * SCALE, BASE_HEIGHT * SCALE)
     )
 
