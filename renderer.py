@@ -119,12 +119,12 @@ def render_story(
 
     font_mrp = ImageFont.truetype(
         "assets/Inter Black 900.otf",
-        int(74 * SCALE)
+        74 * SCALE
     )
 
     font_deal_price = ImageFont.truetype(
         "assets/Inter Black 900.otf",
-        int(74 * SCALE)
+        74 * SCALE
     )
 
     # Product Name
@@ -165,10 +165,10 @@ def render_story(
         95.4 * SCALE,
         ImageColor.getrgb(MRP_COLOR)
     )
-    
+
     # MRP strikethrough line
-    strike_x, strike_y = 142 * SCALE, 1219 * SCALE
-    strike_w, strike_h = 180 * SCALE, 8 * SCALE
+    strike_x, strike_y = 165.62 * SCALE, 1418.28 * SCALE
+    strike_w, strike_h = 210 * SCALE, 10 * SCALE
     draw.rectangle(
         [strike_x, strike_y, strike_x + strike_w, strike_y + strike_h],
         fill=ImageColor.getrgb(MRP_COLOR)
@@ -185,15 +185,22 @@ def render_story(
         ImageColor.getrgb(DEAL_PRICE_COLOR)
     )
 
-    # You Save
-    savings_text = format_savings(old_price, new_price)
-    if savings_text:
-        save_box = (368.62 * SCALE, 1684.28 * SCALE, 273 * SCALE, 58 * SCALE)
+    # You Save — covers the background's baked-in "You save ... on DigiHaat" text
+    # with the full dynamic sentence, since the new box sits on top of it.
+    savings_amount = format_savings(old_price, new_price)
+    if savings_amount:
+        draw.rectangle(
+            [0, 1670 * SCALE, BASE_WIDTH * SCALE, 1760 * SCALE],
+            fill=(255, 255, 255)
+        )
+
+        save_box = (127.62 * SCALE, 1692.28 * SCALE, 827 * SCALE, 50 * SCALE)
+        savings_text = f"You save {savings_amount} on DigiHaat"
         font_save = get_fitted_font(
             draw,
             savings_text,
             "assets/Inter Black 900.otf",
-            int(46.55 * SCALE),
+            47 * SCALE,
             save_box[2]
         )
         draw_centered_text(
