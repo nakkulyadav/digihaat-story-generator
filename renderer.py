@@ -128,13 +128,13 @@ def render_story(
     )
 
     # Product Name
-    name_box = (37.62 * SCALE, 1584.28 * SCALE, 1012 * SCALE, 81 * SCALE)
-    name_text = truncate_to_char_limit(name, 62)
+    name_box = (34 * SCALE, 1585 * SCALE, 1012 * SCALE, 80 * SCALE)
+    name_text = truncate_to_char_limit(name, 46)
     font_name = get_fitted_font(
         draw,
         name_text,
         "assets/Inter Black 900.otf",
-        45 * SCALE,
+        60 * SCALE,
         name_box[2]
     )
     draw_centered_text(
@@ -160,14 +160,14 @@ def render_story(
         draw,
         format_price(old_price),
         font_mrp,
-        136.16 * SCALE,
-        1379.09 * SCALE,
+        135 * SCALE,
+        1380 * SCALE,
         95.4 * SCALE,
         ImageColor.getrgb(MRP_COLOR)
     )
 
     # MRP strikethrough line
-    strike_x, strike_y = 165.62 * SCALE, 1418.28 * SCALE
+    strike_x, strike_y = 166.62 * SCALE, 1420.28 * SCALE
     strike_w, strike_h = 210 * SCALE, 10 * SCALE
     draw.rectangle(
         [strike_x, strike_y, strike_x + strike_w, strike_y + strike_h],
@@ -179,8 +179,8 @@ def render_story(
         draw,
         format_price(new_price),
         font_deal_price,
-        678.49 * SCALE,
-        1379.09 * SCALE,
+        675 * SCALE,
+        1380 * SCALE,
         95.4 * SCALE,
         ImageColor.getrgb(DEAL_PRICE_COLOR)
     )
@@ -194,7 +194,7 @@ def render_story(
             fill=(255, 255, 255)
         )
 
-        save_box = (127.62 * SCALE, 1692.28 * SCALE, 827 * SCALE, 50 * SCALE)
+        save_box = (130 * SCALE, 1680 * SCALE, 827 * SCALE, 50 * SCALE)
         savings_text = f"You save {savings_amount} on DigiHaat"
         font_save = get_fitted_font(
             draw,
