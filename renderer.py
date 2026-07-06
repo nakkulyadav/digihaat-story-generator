@@ -149,7 +149,7 @@ def render_story(
     paste_product_image_cover(
         canvas,
         product_img,
-        (250 * SCALE, 500 * SCALE, 600 * SCALE, 600 * SCALE),
+        (250 * SCALE, 500 * SCALE, 650 * SCALE, 650 * SCALE),
         scale=image_scale,
         offset_x=image_offset_x * SCALE,
         offset_y=image_offset_y * SCALE
@@ -160,14 +160,14 @@ def render_story(
         draw,
         format_price(old_price),
         font_mrp,
-        135 * SCALE,
+        152.62 * SCALE,
         1380 * SCALE,
         95.4 * SCALE,
         ImageColor.getrgb(MRP_COLOR)
     )
 
     # MRP strikethrough line
-    strike_x, strike_y = 166.62 * SCALE, 1420.28 * SCALE
+    strike_x, strike_y = 145 * SCALE, 1425 * SCALE
     strike_w, strike_h = 210 * SCALE, 10 * SCALE
     draw.rectangle(
         [strike_x, strike_y, strike_x + strike_w, strike_y + strike_h],
@@ -179,7 +179,7 @@ def render_story(
         draw,
         format_price(new_price),
         font_deal_price,
-        675 * SCALE,
+        715 * SCALE,
         1380 * SCALE,
         95.4 * SCALE,
         ImageColor.getrgb(DEAL_PRICE_COLOR)
