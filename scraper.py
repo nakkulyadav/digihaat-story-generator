@@ -4,29 +4,57 @@ from PIL import Image, ImageDraw
 from concurrent.futures import ThreadPoolExecutor
 import asyncio, io, base64, traceback, re
 
+def _first_cut_index(text):
+    """Returns the earliest index at which text should be cut, or None if no
+    delimiter is present. A comma cuts at its own position; '-', '|', '(' and
+    digits only cut when they start a word (so 'Wi-Fi' and '3M' survive intact
+    unless they're the entire name, in which case the empty-result fallback
+    in shorten_product_name kicks in)."""
+    candidates = []
+
+    comma_index = text.find(",")
+    if comma_index != -1:
+        candidates.append(comma_index)
+
+    for match in re.finditer(r"\S+", text):
+        word = match.group()
+        if word[0] in "-|(" or word[0].isdigit():
+            candidates.append(match.start())
+            break
+
+    return min(candidates) if candidates else None
+
+
 def shorten_product_name(name):
     """Keeps only the core product name, dropping marketing copy tacked onto scraped titles.
 
     Bundle listings (containing a standalone '+') are left untouched since every part
-    identifies what's included. Otherwise, truncates at the first comma, else at the
-    first word that starts with a digit (weight/pack-size/day-count callouts).
+    identifies what's included. Otherwise, a leading bracketed prefix is skipped
+    (e.g. "(Combo Pack) Widget" -> "Widget"), then the name is truncated at whichever
+    comes first: a comma, or a word starting with '-', '|', '(', or a digit
+    (weight/pack-size/day-count/bundle callouts). If that truncation would leave
+    nothing, the original name is returned untouched rather than shipping a blank title.
     """
     if not name:
         return name
 
-    if re.search(r"(?:^|\s)\+(?:\s|$)", name):
-        return name
+    original = name.strip()
 
-    comma_index = name.find(",")
-    if comma_index != -1:
-        return name[:comma_index].strip()
+    if re.search(r"(?:^|\s)\+(?:\s|$)", original):
+        return original
 
-    words = name.split()
-    for i, word in enumerate(words):
-        if i > 0 and word[0].isdigit():
-            return " ".join(words[:i]).strip()
+    text = original
 
-    return name.strip()
+    if text.startswith("("):
+        close_index = text.find(")")
+        if close_index != -1:
+            text = text[close_index + 1:].strip()
+
+    cut_index = _first_cut_index(text)
+    if cut_index is not None:
+        text = text[:cut_index].rstrip()
+
+    return text if text else original
 
 def _placeholder_data_url(text="No Image"):
     img = Image.new("RGB", (500, 500), color=(200, 200, 200))

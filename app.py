@@ -23,7 +23,7 @@ def _install_playwright_browser():
 
 _install_playwright_browser()
 
-st.set_page_config(page_title="Digihaat Story Generator", layout="wide")
+st.set_page_config(page_title="Digihaat Daily Deals", layout="wide")
 
 # ---------- GLOBAL STYLES ----------
 st.markdown("""
@@ -328,8 +328,8 @@ hr {
 st.markdown("""
 <div class="hero-wrap">
     <div class="hero-eyebrow">✦ &nbsp; Digihaat Internal Tool</div>
-    <div class="hero-title">Story Generator</div>
-    <div class="hero-subtitle">Generate Instagram stories directly from Google Sheets</div>
+    <div class="hero-title">Digihaat Daily Deals</div>
+    <div class="hero-subtitle">Generate creatives for daily deals directly from Google Sheets</div>
     <div class="hero-divider"></div>
 </div>
 """, unsafe_allow_html=True)
@@ -577,24 +577,32 @@ if selected_date in st.session_state.generated_by_date:
                         unsafe_allow_html=True
                     )
 
-                rendered_image = render_story(
-                    current["name"],
-                    current["old_price"],
-                    current["deal_price"],
-                    item["product_image"],
-                    image_scale=current.get("image_scale", 1.0),
-                    image_offset_x=current.get("image_offset_x", 0),
-                    image_offset_y=current.get("image_offset_y", 0)
-                )
+                # Re-render only if this item's values changed since the last
+                # render — otherwise every slider/text edit on ANY story would
+                # re-render ALL stories on every Streamlit rerun.
+                if item.get("_rendered_for") != current:
+                    rendered_image = render_story(
+                        current["name"],
+                        current["old_price"],
+                        current["deal_price"],
+                        item["product_image"],
+                        image_scale=current.get("image_scale", 1.0),
+                        image_offset_x=current.get("image_offset_x", 0),
+                        image_offset_y=current.get("image_offset_y", 0)
+                    )
 
-                st.image(rendered_image, width="stretch")
+                    buffer = io.BytesIO()
+                    rendered_image.save(buffer, format="PNG")
 
-                buffer = io.BytesIO()
-                rendered_image.save(buffer, format="PNG")
+                    item["_rendered_image"] = rendered_image
+                    item["_rendered_bytes"] = buffer.getvalue()
+                    item["_rendered_for"] = copy.deepcopy(current)
+
+                st.image(item["_rendered_image"], width="stretch")
 
                 st.download_button(
                     "⬇ Download",
-                    buffer.getvalue(),
+                    item["_rendered_bytes"],
                     f"story_{i+1}.png",
                     mime="image/png",
                     key=f"download_{selected_date}_{i}"

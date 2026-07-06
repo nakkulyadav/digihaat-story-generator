@@ -49,19 +49,13 @@ def draw_centered_text(draw, text, font, box, color):
 
     draw.text(
         (
-            x + (w - text_w) // 2,
-            y + (h - text_h) // 2
+            x + (w - text_w) / 2 - bbox[0],
+            y + (h - text_h) / 2 - bbox[1]
         ),
         text,
         font=font,
         fill=color
     )
-
-
-def draw_text_line(draw, text, font, x, y, line_height, color):
-    """Draws left-aligned text vertically centered within a (x, y, line_height) box,
-    matching how design tools export single-line text as (top-left, line-height)."""
-    draw.text((x, y + line_height / 2), text, font=font, anchor="lm", fill=color)
 
 
 def get_fitted_font(draw, text, font_path, target_size, max_width, min_size=10):
@@ -156,32 +150,31 @@ def render_story(
     )
 
     # MRP
-    draw_text_line(
+    mrp_box = (170 * SCALE, 1380 * SCALE, 200 * SCALE, 100 * SCALE)
+    draw_centered_text(
         draw,
         format_price(old_price),
         font_mrp,
-        152.62 * SCALE,
-        1380 * SCALE,
-        95.4 * SCALE,
+        mrp_box,
         ImageColor.getrgb(MRP_COLOR)
     )
 
-    # MRP strikethrough line
-    strike_x, strike_y = 145 * SCALE, 1425 * SCALE
+    # MRP strikethrough line — vertically centered on the MRP box's middle
+    strike_x = 165 * SCALE
     strike_w, strike_h = 210 * SCALE, 10 * SCALE
+    strike_y = 1425 * SCALE 
     draw.rectangle(
         [strike_x, strike_y, strike_x + strike_w, strike_y + strike_h],
         fill=ImageColor.getrgb(MRP_COLOR)
     )
 
     # Deal Price
-    draw_text_line(
+    deal_box = (710 * SCALE, 1380 * SCALE, 200 * SCALE, 100 * SCALE)
+    draw_centered_text(
         draw,
         format_price(new_price),
         font_deal_price,
-        715 * SCALE,
-        1380 * SCALE,
-        95.4 * SCALE,
+        deal_box,
         ImageColor.getrgb(DEAL_PRICE_COLOR)
     )
 
