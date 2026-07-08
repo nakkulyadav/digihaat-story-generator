@@ -143,7 +143,7 @@ def render_story(
     paste_product_image_cover(
         canvas,
         product_img,
-        (250 * SCALE, 500 * SCALE, 650 * SCALE, 650 * SCALE),
+        (240 * SCALE, 450 * SCALE, 650 * SCALE, 650 * SCALE),
         scale=image_scale,
         offset_x=image_offset_x * SCALE,
         offset_y=image_offset_y * SCALE
