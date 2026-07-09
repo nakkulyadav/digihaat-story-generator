@@ -113,16 +113,16 @@ def render_story(
 
     font_mrp = ImageFont.truetype(
         "assets/Inter Black 900.otf",
-        74 * SCALE
+        88 * SCALE
     )
 
     font_deal_price = ImageFont.truetype(
         "assets/Inter Black 900.otf",
-        74 * SCALE
+        88 * SCALE
     )
 
     # Product Name
-    name_box = (34 * SCALE, 1585 * SCALE, 1012 * SCALE, 80 * SCALE)
+    name_box = (40 * SCALE, 995 * SCALE, 1000 * SCALE, 80 * SCALE)
     name_text = truncate_to_char_limit(name, 46)
     font_name = get_fitted_font(
         draw,
@@ -143,14 +143,14 @@ def render_story(
     paste_product_image_cover(
         canvas,
         product_img,
-        (240 * SCALE, 450 * SCALE, 650 * SCALE, 650 * SCALE),
+        (207 * SCALE, 288 * SCALE, 667 * SCALE, 667 * SCALE),
         scale=image_scale,
         offset_x=image_offset_x * SCALE,
         offset_y=image_offset_y * SCALE
     )
 
     # MRP
-    mrp_box = (170 * SCALE, 1380 * SCALE, 200 * SCALE, 100 * SCALE)
+    mrp_box = (150 * SCALE, 1450 * SCALE, 240 * SCALE, 120 * SCALE)
     draw_centered_text(
         draw,
         format_price(old_price),
@@ -160,16 +160,16 @@ def render_story(
     )
 
     # MRP strikethrough line — vertically centered on the MRP box's middle
-    strike_x = 165 * SCALE
-    strike_w, strike_h = 210 * SCALE, 10 * SCALE
-    strike_y = 1425 * SCALE 
+    strike_x = 145 * SCALE
+    strike_w, strike_h = 250 * SCALE, 12 * SCALE
+    strike_y = 1504 * SCALE 
     draw.rectangle(
         [strike_x, strike_y, strike_x + strike_w, strike_y + strike_h],
         fill=ImageColor.getrgb(MRP_COLOR)
     )
 
     # Deal Price
-    deal_box = (710 * SCALE, 1380 * SCALE, 200 * SCALE, 100 * SCALE)
+    deal_box = (700 * SCALE, 1450 * SCALE, 240 * SCALE, 120 * SCALE)
     draw_centered_text(
         draw,
         format_price(new_price),
@@ -187,13 +187,13 @@ def render_story(
             fill=(255, 255, 255)
         )
 
-        save_box = (130 * SCALE, 1680 * SCALE, 827 * SCALE, 50 * SCALE)
+        save_box = (105 * SCALE, 1680 * SCALE, 870 * SCALE, 50 * SCALE)
         savings_text = f"You save {savings_amount} on DigiHaat"
         font_save = get_fitted_font(
             draw,
             savings_text,
             "assets/Inter Black 900.otf",
-            47 * SCALE,
+            54 * SCALE,
             save_box[2]
         )
         draw_centered_text(
